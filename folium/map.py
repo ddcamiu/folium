@@ -486,7 +486,7 @@ class TMSLayer(Layer):
 
         self.detect_retina = detect_retina
 
-        self.tiles = ''.join(tiles.lower().strip().split())+'/{z}/{x}/{y}.png'
+        self.tiles = ''.join(tiles.lower().strip().split())
         if self.tiles in ('cloudmade', 'mapbox') and not API_key:
             raise ValueError('You must pass an API key if using Cloudmade'
                              ' or non-default Mapbox tiles.')
@@ -499,7 +499,7 @@ class TMSLayer(Layer):
             self.tiles = self._env.get_template(tile_template).render(API_key=API_key)  # noqa
             self.attr = self._env.get_template(attr_template).render()
         else:
-            self.tiles = tiles
+            self.tiles = tiles+'/{z}/{x}/{y}.png'
             if not attr:
                 raise ValueError('Custom tiles must'
                                  ' also be passed an attribution.')
