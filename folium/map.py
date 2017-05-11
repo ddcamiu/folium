@@ -378,7 +378,7 @@ class TileLayer(Layer):
     def __init__(self, tiles='OpenStreetMap', min_zoom=1, max_zoom=18,
                  attr=None, API_key=None, detect_retina=False,
                  continuous_world=False, name=None, overlay=False,
-                 control=True, no_wrap=False):
+                 control=True, no_wrap=False, extra=None):
         self.tile_name = (name if name is not None else
                           ''.join(tiles.lower().strip().split()))
         super(TileLayer, self).__init__(name=self.tile_name, overlay=overlay,
@@ -414,6 +414,9 @@ class TileLayer(Layer):
                 attr = text_type(attr, 'utf8')
             self.attr = attr
 
+        self.extra=''
+        if extra:
+            self.extra=','+','.join('%s:%s'%(key,value) for key,value in extra.items())
         self._template = Template(u"""
         {% macro script(this, kwargs) %}
             var {{this.get_name()}} = L.tileLayer(
@@ -424,7 +427,7 @@ class TileLayer(Layer):
                     continuousWorld: {{this.continuous_world.__str__().lower()}},
                     noWrap: {{this.no_wrap.__str__().lower()}},
                     attribution: '{{this.attr}}',
-                    detectRetina: {{this.detect_retina.__str__().lower()}}
+                    detectRetina: {{this.detect_retina.__str__().lower()}} {{this.extra}}
                     }
                 ).addTo({{this._parent.get_name()}});
 
