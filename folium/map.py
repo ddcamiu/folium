@@ -474,7 +474,7 @@ class TMSLayer(Layer):
     def __init__(self, tiles='OpenStreetMap', min_zoom=1, max_zoom=18,
                  attr='&copy; CyberGIS Center', API_key=None, detect_retina=False,
                  continuous_world=False, name=None, overlay=True,
-                 control=True, no_wrap=False):
+                 control=True, no_wrap=False, extra=None):
         self.tile_name = (name if name is not None else
                           ''.join(tiles.lower().strip().split()))
         super(TMSLayer, self).__init__(name=self.tile_name, overlay=overlay,
@@ -510,6 +510,9 @@ class TMSLayer(Layer):
                 attr = text_type(attr, 'utf8')
             self.attr = attr
 
+        self.extra=''
+        if extra:
+            self.extra=','+','.join('%s:%s'%(key,value) for key,value in extra.items())
         self._template = Template(u"""
         {% macro script(this, kwargs) %}
             var {{this.get_name()}} = L.tileLayer(
@@ -521,7 +524,7 @@ class TMSLayer(Layer):
                     noWrap: {{this.no_wrap.__str__().lower()}},
                     attribution: '{{this.attr}}',
                     detectRetina: {{this.detect_retina.__str__().lower()}},
-                    tms: true
+                    tms: true {{this.extra}}
                     }
                 ).addTo({{this._parent.get_name()}});
 
