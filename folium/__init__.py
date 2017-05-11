@@ -9,7 +9,7 @@ from branca.colormap import (ColorMap, LinearColormap, StepColormap)
 
 from .folium import Map
 from .map import (
-    FeatureGroup, FitBounds, Icon, LayerControl, Marker, Popup, TileLayer
+    FeatureGroup, FitBounds, Icon, LayerControl, Marker, Popup, TileLayer, TMSLayer
 )
 from .features import (
     ClickForMarker, CustomIcon, DivIcon, GeoJson, LatLngPopup, CircleMarker,
