@@ -518,7 +518,7 @@ class TMSLayer(Layer):
                     noWrap: {{this.no_wrap.__str__().lower()}},
                     attribution: '{{this.attr}}',
                     detectRetina: {{this.detect_retina.__str__().lower()}},
-                    tms: True
+                    tms: true
                     }
                 ).addTo({{this._parent.get_name()}});
 
