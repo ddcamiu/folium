@@ -431,6 +431,99 @@ class TileLayer(Layer):
         {% endmacro %}
         """)  # noqa
 
+class TMSLayer(Layer):
+    """Create a TMS layer to append on a Map.
+
+    Parameters
+    ----------
+    tiles: str, default 'OpenStreetMap'
+        Map tileset to use. Can choose from this list of built-in tiles:
+            - "OpenStreetMap"
+            - "Mapbox Bright" (Limited levels of zoom for free tiles)
+            - "Mapbox Control Room" (Limited levels of zoom for free tiles)
+            - "Stamen" (Terrain, Toner, and Watercolor)
+            - "Cloudmade" (Must pass API key)
+            - "Mapbox" (Must pass API key)
+            - "CartoDB" (positron and dark_matter)
+
+        You can pass a custom tileset to Folium by passing a Leaflet-style
+        URL to the tiles parameter:
+        http://{s}.yourtiles.com/{z}/{x}/{y}.png
+    min_zoom: int, default 1
+        Minimal zoom for which the layer will be displayed.
+    max_zoom: int, default 18
+        Maximal zoom for which the layer will be displayed.
+    attr: string, default None
+        Map tile attribution; only required if passing custom tile URL.
+    API_key: str, default None
+        API key for Cloudmade or Mapbox tiles.
+    detect_retina: bool, default False
+        If true and user is on a retina display, it will request four
+        tiles of half the specified size and a bigger zoom level in place
+        of one to utilize the high resolution.
+    name : string, default None
+        The name of the Layer, as it will appear in LayerControls
+    overlay : bool, default True
+        Adds the layer as an optional overlay (True) or the base layer (False).
+    control : bool, default True
+        Whether the Layer will be included in LayerControls.
+    """
+    def __init__(self, tiles='OpenStreetMap', min_zoom=1, max_zoom=18,
+                 attr='&copy; CyberGIS Center', API_key=None, detect_retina=False,
+                 continuous_world=False, name=None, overlay=True,
+                 control=True, no_wrap=False):
+        self.tile_name = (name if name is not None else
+                          ''.join(tiles.lower().strip().split()))
+        super(TMSLayer, self).__init__(name=self.tile_name, overlay=overlay,
+                                        control=control)
+        self._name = 'TMSLayer'
+        self._env = ENV
+
+        self.min_zoom = min_zoom
+        self.max_zoom = max_zoom
+        self.no_wrap = no_wrap
+        self.continuous_world = continuous_world
+
+        self.detect_retina = detect_retina
+
+        self.tiles = ''.join(tiles.lower().strip().split())+'/{z}/{x}/{y}.png'
+        if self.tiles in ('cloudmade', 'mapbox') and not API_key:
+            raise ValueError('You must pass an API key if using Cloudmade'
+                             ' or non-default Mapbox tiles.')
+        templates = list(self._env.list_templates(
+            filter_func=lambda x: x.startswith('tiles/')))
+        tile_template = 'tiles/'+self.tiles+'/tiles.txt'
+        attr_template = 'tiles/'+self.tiles+'/attr.txt'
+
+        if tile_template in templates and attr_template in templates:
+            self.tiles = self._env.get_template(tile_template).render(API_key=API_key)  # noqa
+            self.attr = self._env.get_template(attr_template).render()
+        else:
+            self.tiles = tiles
+            if not attr:
+                raise ValueError('Custom tiles must'
+                                 ' also be passed an attribution.')
+            if isinstance(attr, binary_type):
+                attr = text_type(attr, 'utf8')
+            self.attr = attr
+
+        self._template = Template(u"""
+        {% macro script(this, kwargs) %}
+            var {{this.get_name()}} = L.tileLayer(
+                '{{this.tiles}}',
+                {
+                    maxZoom: {{this.max_zoom}},
+                    minZoom: {{this.min_zoom}},
+                    continuousWorld: {{this.continuous_world.__str__().lower()}},
+                    noWrap: {{this.no_wrap.__str__().lower()}},
+                    attribution: '{{this.attr}}',
+                    detectRetina: {{this.detect_retina.__str__().lower()}},
+                    tms: True
+                    }
+                ).addTo({{this._parent.get_name()}});
+
+        {% endmacro %}
+        """)  # noqa
 
 class FeatureGroup(Layer):
     """
